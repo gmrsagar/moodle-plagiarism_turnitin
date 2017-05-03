@@ -55,18 +55,18 @@ require_once(dirname(dirname(__FILE__)).'/classes/modules/turnitin_workshop.clas
 
 global $DB;
 
-$sql = 'SELECT assub.id, cm.id AS cmid, f.itemid, assub.userid, f.pathnamehash, ptc2.value
+$sql = 'SELECT assub.id, cm.id AS cmid, f.itemid, f.userid, f.pathnamehash, ptc2.value
 FROM {assign_submission} assub
 JOIN {assign} a ON (assub.assignment = a.id)
 LEFT JOIN {assign_grades} ag ON (ag.assignment = a.id AND ag.userid = assub.userid AND ag.attemptnumber = assub.attemptnumber)
 JOIN {course_modules} cm ON (a.id = cm.instance)
-JOIN {turnitintooltwo_users} tu ON (tu.userid = assub.userid AND tu.user_agreement_accepted = 1)
-JOIN {user_enrolments} ue ON (ue.userid = assub.userid AND ue.status = 0)
-JOIN {enrol} e ON (e.id = ue.enrolid AND e.courseid = cm.course)
 JOIN {modules} m ON (cm.module = m.id AND m.name = \'assign\')
 JOIN {context} c ON (c.instanceid = cm.id AND contextlevel = 70)
 JOIN {assignsubmission_file} asf ON (asf.submission = assub.id)
 JOIN {files} f ON (f.contextid = c.id AND f.itemid = assub.id AND f.component = \'assignsubmission_file\' AND f.filename != \'.\')
+JOIN {user_enrolments} ue ON (ue.userid = f.userid AND ue.status = 0)
+JOIN {enrol} e ON (e.id = ue.enrolid AND e.courseid = cm.course)
+JOIN {turnitintooltwo_users} tu ON (tu.userid = f.userid AND tu.user_agreement_accepted = 1)
 JOIN {plagiarism_turnitin_config} ptc ON (ptc.cm = cm.id AND ptc.name = \'use_turnitin\' AND ptc.value = \'1\')
 JOIN {plagiarism_turnitin_config} ptc2 ON (ptc2.cm = cm.id AND ptc2.name = \'turnitin_assignid\')
 LEFT JOIN {plagiarism_turnitin_files} ptf ON (ptf.identifier = f.pathnamehash)
@@ -79,19 +79,16 @@ $pp_turnitin = new plagiarism_plugin_turnitin;
 foreach($missing as $sub) {
     // Fetch course module object and course data.
     $cm = get_coursemodule_from_id('', $sub->cmid);
-    $coursedata = $pp_turnitin->get_course_data($cm->id, $cm->course, 'cron');
     
     // Assemble user data.
     $moduleobject = new turnitin_assign;
     $author = $moduleobject->get_author($sub->itemid);
     $author = (!empty($author)) ? $author : $sub->userid;
-    $user = new turnitintooltwo_user($author, 'Learner');
-    $user->join_user_to_class($coursedata->turnitin_cid);
     $submitter = $sub->userid;
     
     // Handle the resubmission.
-    $pp_turnitin->tii_submission($cm, (int) $sub->value, $user, $submitter,
-            $sub->pathnamehash, 'file', $sub->itemid, '', '', '');
+    $pp_turnitin->queue_submission_to_turnitin($cm, $author, $submitter,
+            $sub->pathnamehash, 'file', $sub->itemid, '');
 }
 
 $missing->close();
