@@ -55,18 +55,18 @@ require_once(dirname(dirname(__FILE__)).'/classes/modules/turnitin_workshop.clas
 
 global $DB;
 
-$sql = 'SELECT assub.id, cm.id AS cmid, f.itemid, assub.userid, f.pathnamehash, ptc2.value
+$sql = 'SELECT assub.id, cm.id AS cmid, f.itemid, f.userid, f.pathnamehash, ptc2.value
 FROM {assign_submission} assub
 JOIN {assign} a ON (assub.assignment = a.id)
 LEFT JOIN {assign_grades} ag ON (ag.assignment = a.id AND ag.userid = assub.userid AND ag.attemptnumber = assub.attemptnumber)
 JOIN {course_modules} cm ON (a.id = cm.instance)
-JOIN {turnitintooltwo_users} tu ON (tu.userid = assub.userid AND tu.user_agreement_accepted = 1)
-JOIN {user_enrolments} ue ON (ue.userid = assub.userid AND ue.status = 0)
-JOIN {enrol} e ON (e.id = ue.enrolid AND e.courseid = cm.course)
 JOIN {modules} m ON (cm.module = m.id AND m.name = \'assign\')
 JOIN {context} c ON (c.instanceid = cm.id AND contextlevel = 70)
 JOIN {assignsubmission_file} asf ON (asf.submission = assub.id)
 JOIN {files} f ON (f.contextid = c.id AND f.itemid = assub.id AND f.component = \'assignsubmission_file\' AND f.filename != \'.\')
+JOIN {user_enrolments} ue ON (ue.userid = f.userid AND ue.status = 0)
+JOIN {enrol} e ON (e.id = ue.enrolid AND e.courseid = cm.course)
+JOIN {turnitintooltwo_users} tu ON (tu.userid = f.userid AND tu.user_agreement_accepted = 1)
 JOIN {plagiarism_turnitin_config} ptc ON (ptc.cm = cm.id AND ptc.name = \'use_turnitin\' AND ptc.value = \'1\')
 JOIN {plagiarism_turnitin_config} ptc2 ON (ptc2.cm = cm.id AND ptc2.name = \'turnitin_assignid\')
 LEFT JOIN {plagiarism_turnitin_files} ptf ON (ptf.identifier = f.pathnamehash)
