@@ -2123,6 +2123,8 @@ class plagiarism_plugin_turnitin extends plagiarism_plugin {
                 $moduleobject = new $moduleclass;
 
                 $author = $moduleobject->get_author($eventdata->itemid);
+                // If the submissions has a userid of 0 it is a group submission.
+                $groupsub = $author == 0;
                 $author = (!empty($author)) ? $author : $eventdata->userid;
 
                 $errorcode = "";
@@ -2153,9 +2155,12 @@ class plagiarism_plugin_turnitin extends plagiarism_plugin {
                 if ($eventdata->modulename == 'assign' &&
                     ($eventdata->event_type == "files_done" || $eventdata->event_type == "assessable_submitted")) {
 
+                    // If we're looking for a group submission, the userid will be 0.
+                    $userid = $groupsub ? 0 : $author;
+
                     // Get content.
                     $moodlesubmission = $DB->get_record('assign_submission', array('assignment' => $cm->instance,
-                                                'userid' => $author, 'id' => $eventdata->itemid), 'id');
+                                                'userid' => $userid, 'id' => $eventdata->itemid), 'id');
                     if ($moodletextsubmission = $DB->get_record('assignsubmission_onlinetext',
                                                 array('submission' => $moodlesubmission->id), 'onlinetext')) {
                         $eventdata->content = $moodletextsubmission->onlinetext;
