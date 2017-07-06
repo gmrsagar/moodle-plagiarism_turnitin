@@ -70,7 +70,7 @@ JOIN {turnitintooltwo_users} tu ON (tu.userid = f.userid AND tu.user_agreement_a
 JOIN {plagiarism_turnitin_config} ptc ON (ptc.cm = cm.id AND ptc.name = \'use_turnitin\' AND ptc.value = \'1\')
 JOIN {plagiarism_turnitin_config} ptc2 ON (ptc2.cm = cm.id AND ptc2.name = \'turnitin_assignid\')
 LEFT JOIN {plagiarism_turnitin_files} ptf ON (ptf.identifier = f.pathnamehash)
-WHERE AND assub.status != \'draft\' AND assub.latest = 1 AND ptf.id IS NULL
+WHERE assub.status != \'draft\' AND assub.latest = 1 AND ptf.id IS NULL
 ORDER BY assub.assignment';
 
 $missing = $DB->get_recordset_sql($sql);
