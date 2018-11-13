@@ -95,7 +95,7 @@ class plagiarism_turnitin_privacy_provider_testcase extends \core_privacy\tests\
         $csresponse = $this->create_submission();
 
         // Set the cm to the correct one for our submission.
-        $cms = $DB->get_records('course_modules');
+        $cms = $DB->get_records('course_modules', array('module' => 1));
         $cm = reset($cms);
         $submissions = $DB->get_records('plagiarism_turnitin_files');
         $submission = reset($submissions);
